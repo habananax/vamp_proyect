@@ -1,0 +1,29 @@
+---
+- hosts: all
+  sudo: true
+  tasks:
+        - name: actualizando
+          apt: update_cache=yes
+        - name: instalando mysql
+          apt: name=mysql-server state=present
+        - name: instalando python mysql
+          apt: name=python-mysqldb state=present
+        - name: Crear usuario haproxy_root
+          mysql_user: name=haproxy_root
+                      host=192.168.8.90
+                      password=ortiznavarro
+                      priv=*.*:ALL,GRANT
+                      state=present
+                      login_user=root
+                      login_password=
+        - name: Insertando el usuario haproxy_check
+          shell: mysql -u root -e "INSERT INTO mysql.user (Host,User) values ('192.168.8.90','haproxy_check'); FLUSH PRIVILEGES;"
+        - name: Crear base de datos
+          mysql_db: name=prueba
+                    state=present
+        - name: Cambiando my.cnf
+          template:
+           src=my.cnf.j2
+           dest=/etc/mysql/my.cnf
+        - name: restart mysql
+          service: name=mysql state=restarted
